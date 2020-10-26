@@ -10,8 +10,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define CLOCK_PIN	31
-#define DATA_PIN	30
+#define CLOCK_PIN	16
+#define DATA_PIN	20
 #define N_SAMPLES	64
 #define SPREAD		10
 

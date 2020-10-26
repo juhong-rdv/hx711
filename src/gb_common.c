@@ -36,7 +36,9 @@
 
 #include "gb_common.h"
 
-#define BCM2708_PERI_BASE        0x20000000
+//#define BCM2708_PERI_BASE        0x20000000
+#define BCM2708_PERI_BASE        0x3F000000
+
 #define CLOCK_BASE               (BCM2708_PERI_BASE + 0x101000) /* Clocks */
 #define GPIO_BASE                (BCM2708_PERI_BASE + 0x200000) /* GPIO   */
 #define PWM_BASE                 (BCM2708_PERI_BASE + 0x20C000) /* PWM    */
