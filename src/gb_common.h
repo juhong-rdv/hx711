@@ -24,6 +24,9 @@
 // (e.g. do not use #ifndef big_demo_h....)
 //
 
+#ifndef INCLUDE_GB_COMMON_H
+#define INCLUDE_GB_COMMON_H
+
 
 #include <stdio.h>
 
@@ -63,3 +66,5 @@ int pi_revision();
 
 #define UART0_BAUD_HI *(uart+9)
 #define UART0_BAUD_LO *(uart+10)
+
+#endif

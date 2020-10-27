@@ -9,9 +9,14 @@ set(SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src)
 FILE(GLOB SRC_SRC "${SRC_PATH}/*.c" ) 
 include_directories(${SRC_PATH})
 
+#example
+set(EXAMPLE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/example)
+FILE(GLOB EXAMPLE_SRC "${EXAMPLE_PATH}/*.cpp" ) 
+include_directories(${EXAMPLE_PATH})
+
 #wiringPi
 find_library(wiringPi_LIB wiringPi)
 
-add_executable( hx711 ${SRC_SRC} )
+add_executable( hx711 ${SRC_SRC} ${EXAMPLE_SRC} )
 
 target_link_libraries(hx711 ${wiringPi_LIB} crypt rt pthread m)

@@ -2,26 +2,7 @@
  gurov was here, use this code, or don't, whatever, I don't care. If you see a giant bug with a billion legs, please let me know so it can be squashed
 
 */
-#include <stdio.h>
-#include "gb_common.h"
-#include <sched.h>
-#include <string.h>
-#include <stdlib.h>
-
-#define CLOCK_PIN	16
-#define DATA_PIN	20
-#define N_SAMPLES	64
-#define SPREAD		10
-
-#define SCK_ON  (GPIO_SET0 = (1 << CLOCK_PIN))
-#define SCK_OFF (GPIO_CLR0 = (1 << CLOCK_PIN))
-#define DT_R    (GPIO_IN0  & (1 << DATA_PIN))
-
-void           reset_converter(void);
-unsigned long  read_cnt(long offset, int argc);
-void           set_gain(int r);
-void           setHighPri (void);
-
+#include "hx711.h"
 
 void setHighPri (void)
 {
@@ -141,13 +122,13 @@ unsigned long read_cnt(long offset, int argc) {
 
 // if things are broken this will show actual data
 
-#if 0
-if (argc < 2 ) {
+#if 1
+if (argc < 0 ) {
   for (i=31;i>=0;i--) {
    printf("%d ", ((count-offset) & ( 1 << i )) != 0 );
   }
 
-  printf("n: %10d     -  ", count - offset);
+  printf("n: %10d     -  ", (int)(count - offset));
   printf("\n"); 
 }
 #endif
@@ -156,9 +137,11 @@ if (argc < 2 ) {
 
 }
 
-unsigned long Init(int argc, char **argv)
+long Init(int argc, char **argv)
 {
-	unsigned long ret = -1 ;
+	printf("Initial HX711 and Value\n") ;
+	
+	long ret = -1 ;
 	
 	int i, j;
   long tmp=0;
@@ -182,12 +165,17 @@ unsigned long Init(int argc, char **argv)
 
   j=0;
 
+	
   // get the dirty samples and average them
   for(i=0;i<nsamples;i++) {
   	reset_converter();
-  	samples[i] = read_cnt(0, argc);
+  	samples[i] = read_cnt(0, -1);
   	tmp_avg += samples[i];
+
+	//printf("\b\b\b\b") ;
+	//printf("%02d%%", (int)(((float)i / (float)nsamples)*100.0)) ;
   }
+  //printf("\n") ;
 
   tmp_avg = tmp_avg / nsamples;
 
@@ -199,7 +187,8 @@ unsigned long Init(int argc, char **argv)
 
   printf("%d %d\n", (int) filter_low, (int) filter_high);
 
-  for(i=0;i<nsamples;i++) {
+  for(i=0;i<nsamples;i++) 
+  {
 	if ((samples[i] < filter_high && samples[i] > filter_low) || 
             (samples[i] > filter_high && samples[i] < filter_low) ) {
 		tmp_avg2 += samples[i];
@@ -226,19 +215,27 @@ void DeInit(void)
   restore_io();
 }
 
+long GetData(void)
+{
+	reset_converter();
+	return read_cnt(0, 0);
+}
+
+
+#if 0
 int main(int argc, char **argv)
 {
   
-	unsigned long value_init = Init(argc, argv) ;
+	long value_init = Init(argc, argv) ;
 
 	while(1) 
 	{
-		reset_converter();
-		unsigned long data = read_cnt(0, argc);
+		long data = GetData();
 
-		printf("init(%ld), data=%ld\n", value_init, data ) ;
+		printf("init(%10d), data=%10d\n", (int)value_init, (int)data ) ;
 	}
 	
   	DeInit() ;
 }
+#endif
 
