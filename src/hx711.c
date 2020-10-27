@@ -109,7 +109,7 @@ int main(int argc, char **argv)
   filter_low =  (float) tmp_avg * (1.0 - spread_percent);
   filter_high = (float) tmp_avg * (1.0 + spread_percent);
 
-//  printf("%d %d\n", (int) filter_low, (int) filter_high);
+  printf("%d %d\n", (int) filter_low, (int) filter_high);
 
   for(i=0;i<nsamples;i++) {
 	if ((samples[i] < filter_high && samples[i] > filter_low) || 
