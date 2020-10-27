@@ -141,7 +141,7 @@ void setup_io()
 {  unsigned long extra;
 
    /* open /dev/mem */
-   if ((mem_fd = open("/dev/mem", O_RDWR|O_SYNC) ) < 0) {
+   if ((mem_fd = open("/dev/gpiomem", O_RDWR|O_SYNC) ) < 0) {
       printf("Can't open /dev/mem\n");
       printf("Did you forgot to use 'sudo .. ?'\n");
       exit (-1);
