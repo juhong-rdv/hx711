@@ -4,6 +4,8 @@
 */
 #include "hx711.h"
 
+float g_filter_low=0, g_filter_high=0;
+
 void setHighPri (void)
 {
   struct sched_param sched ;
@@ -148,7 +150,6 @@ long Init(int argc, char **argv)
   long tmp_avg=0;
   long tmp_avg2;
   long offset=0;
-  float filter_low, filter_high;
   float spread_percent = SPREAD / 100.0 /2.0;
   int b;
   int nsamples=N_SAMPLES;
@@ -182,15 +183,15 @@ long Init(int argc, char **argv)
   tmp_avg2 = 0;
   j=0;
 
-  filter_low =  (float) tmp_avg * (1.0 - spread_percent);
-  filter_high = (float) tmp_avg * (1.0 + spread_percent);
+  g_filter_low =  (float) tmp_avg * (1.0 - spread_percent);
+  g_filter_high = (float) tmp_avg * (1.0 + spread_percent);
 
-  printf("%d %d\n", (int) filter_low, (int) filter_high);
+  printf("%d %d\n", (int) g_filter_low, (int) g_filter_high);
 
   for(i=0;i<nsamples;i++) 
   {
-	if ((samples[i] < filter_high && samples[i] > filter_low) || 
-            (samples[i] > filter_high && samples[i] < filter_low) ) {
+	if ((samples[i] < g_filter_high && samples[i] > g_filter_low) || 
+            (samples[i] > g_filter_high && samples[i] < g_filter_low) ) {
 		tmp_avg2 += samples[i];
 	        j++;
 	}
@@ -218,7 +219,23 @@ void DeInit(void)
 long GetData(void)
 {
 	reset_converter();
-	return read_cnt(0, 0);
+
+	long data = 0 ;
+	int count = 10 ;
+	while(count >= 0 )
+	{
+		data = read_cnt(0, 0) ;
+
+		if ((data < g_filter_high && data > g_filter_low) || 
+	            (data > g_filter_high && data < g_filter_low) ) 
+	    {
+			break ;
+		}
+
+		count-- ;
+	}
+			
+	return data;
 }
 
 
