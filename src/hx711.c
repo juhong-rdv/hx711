@@ -2,8 +2,6 @@
  gurov was here, use this code, or don't, whatever, I don't care. If you see a giant bug with a billion legs, please let me know so it can be squashed
 
 */
-
-
 #include <stdio.h>
 #include "gb_common.h"
 #include <sched.h>
@@ -40,7 +38,8 @@ void setHighPri (void)
 void setup_gpio()
 {
   INP_GPIO(DATA_PIN);
-  INP_GPIO(CLOCK_PIN);  OUT_GPIO(CLOCK_PIN);
+  //INP_GPIO(CLOCK_PIN);  
+  OUT_GPIO(CLOCK_PIN);
   SCK_OFF;
 
 //   GPIO_PULL = 0;
@@ -67,70 +66,6 @@ void 	unpull_pins()
    GPIO_PULL = 0;
    GPIO_PULLCLK0 = 0;
 } // unpull_pins
-
-
-
-int main(int argc, char **argv)
-{
-  int i, j;
-  long tmp=0;
-  long tmp_avg=0;
-  long tmp_avg2;
-  long offset=0;
-  float filter_low, filter_high;
-  float spread_percent = SPREAD / 100.0 /2.0;
-  int b;
-  int nsamples=N_SAMPLES;
-  long samples[nsamples];
-
-  if (argc == 2) {
-   offset = atol(argv[1]);
-  }
-
-  setHighPri();
-  setup_io();
-  setup_gpio();
-  reset_converter();
-
-  j=0;
-
-  // get the dirty samples and average them
-  for(i=0;i<nsamples;i++) {
-  	reset_converter();
-  	samples[i] = read_cnt(0, argc);
-  	tmp_avg += samples[i];
-  }
-
-  tmp_avg = tmp_avg / nsamples;
-
-  tmp_avg2 = 0;
-  j=0;
-
-  filter_low =  (float) tmp_avg * (1.0 - spread_percent);
-  filter_high = (float) tmp_avg * (1.0 + spread_percent);
-
-  printf("%d %d\n", (int) filter_low, (int) filter_high);
-
-  for(i=0;i<nsamples;i++) {
-	if ((samples[i] < filter_high && samples[i] > filter_low) || 
-            (samples[i] > filter_high && samples[i] < filter_low) ) {
-		tmp_avg2 += samples[i];
-	        j++;
-	}
-  }
-
-  if (j == 0) {
-    printf("No data to consider\n");
-    exit(255);
-
-  }
-  printf("%d\n", (tmp_avg2 / j) - offset);
-
-//  printf("average within %f percent: %d from %d samples, original: %d\n", spread_percent*100, (tmp_avg2 / j) - offset, j, tmp_avg - offset);
-  unpull_pins();
-  restore_io();
-}
-
 
 void reset_converter(void) {
 	SCK_ON;
@@ -206,7 +141,7 @@ unsigned long read_cnt(long offset, int argc) {
 
 // if things are broken this will show actual data
 
-
+#if 0
 if (argc < 2 ) {
   for (i=31;i>=0;i--) {
    printf("%d ", ((count-offset) & ( 1 << i )) != 0 );
@@ -215,9 +150,95 @@ if (argc < 2 ) {
   printf("n: %10d     -  ", count - offset);
   printf("\n"); 
 }
+#endif
 
   return (count - offset);
 
 }
 
+unsigned long Init(int argc, char **argv)
+{
+	unsigned long ret = -1 ;
+	
+	int i, j;
+  long tmp=0;
+  long tmp_avg=0;
+  long tmp_avg2;
+  long offset=0;
+  float filter_low, filter_high;
+  float spread_percent = SPREAD / 100.0 /2.0;
+  int b;
+  int nsamples=N_SAMPLES;
+  long samples[nsamples];
+
+  if (argc == 2) {
+   offset = atol(argv[1]);
+  }
+
+  setHighPri();
+  setup_io();
+  setup_gpio();
+  reset_converter();
+
+  j=0;
+
+  // get the dirty samples and average them
+  for(i=0;i<nsamples;i++) {
+  	reset_converter();
+  	samples[i] = read_cnt(0, argc);
+  	tmp_avg += samples[i];
+  }
+
+  tmp_avg = tmp_avg / nsamples;
+
+  tmp_avg2 = 0;
+  j=0;
+
+  filter_low =  (float) tmp_avg * (1.0 - spread_percent);
+  filter_high = (float) tmp_avg * (1.0 + spread_percent);
+
+  printf("%d %d\n", (int) filter_low, (int) filter_high);
+
+  for(i=0;i<nsamples;i++) {
+	if ((samples[i] < filter_high && samples[i] > filter_low) || 
+            (samples[i] > filter_high && samples[i] < filter_low) ) {
+		tmp_avg2 += samples[i];
+	        j++;
+	}
+  }
+
+  if (j == 0) {
+    printf("No data to consider\n");
+  }
+  else
+  {
+  	ret = (tmp_avg2 / (long)j) - offset ;
+	
+  	printf("%ld\n", ret);
+  }
+
+  return ret ;
+}
+
+void DeInit(void)
+{
+	unpull_pins();
+  restore_io();
+}
+
+int main(int argc, char **argv)
+{
+  
+	unsigned long value_init = Init(argc, argv) ;
+
+	while(1) 
+	{
+		reset_converter();
+		unsigned long data = read_cnt(0, argc);
+
+		printf("init(%ld), data=%ld\n", value_init, data ) ;
+	}
+	
+  	DeInit() ;
+}
 
